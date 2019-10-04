@@ -1,45 +1,69 @@
-﻿namespace VkNet.Utils
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Text;
+
+namespace VkNet.Utils
 {
-    using System;
-    using System.IO;
-    using System.Net;
-    using System.Text;
+	/// <summary>
+	/// </summary>
+	public sealed class WebCallResult
+	{
+		/// <summary>
+		/// Инициализация класса WebCallResult
+		/// </summary>
+		/// <param name="url"> URL. </param>
+		/// <param name="cookies"> Куки. </param>
+		public WebCallResult(string url, Cookies cookies)
+		{
+			RequestUrl = new Uri(uriString: url);
+			Cookies = cookies;
+			Response = string.Empty;
+		}
 
-    using HtmlAgilityPack;
+		/// <summary>
+		/// URL запроса.
+		/// </summary>
+		public Uri RequestUrl { get; }
 
-    internal sealed class WebCallResult
-    {
-        public Uri RequestUrl { get; private set; }
+		/// <summary>
+		/// Куки.
+		/// </summary>
+		public Cookies Cookies { get; }
 
-        public Cookies Cookies { get; private set; }
+		/// <summary>
+		/// Получить URL ответа.
+		/// </summary>
+		public Uri ResponseUrl { get; private set; }
 
-        public Uri ResponseUrl { get; set; }
+		/// <summary>
+		/// Ответ.
+		/// </summary>
+		public string Response { get; private set; }
 
-        public string Response { get; private set; }
+		/// <summary>
+		/// Сохранить куки.
+		/// </summary>
+		/// <param name="cookies"> Куки. </param>
+		public void SaveCookies(CookieCollection cookies)
+		{
+			Cookies.AddFrom(responseUrl: ResponseUrl, cookies: cookies);
+		}
 
-        public WebCallResult(string url, Cookies cookies)
-        {
-            RequestUrl = new Uri(url);
-            Cookies = cookies;
-            Response = string.Empty;
-        }
+		/// <summary>
+		/// Сохранить ответ.
+		/// </summary>
+		/// <param name="responseUrl"> URL ответ. </param>
+		/// <param name="stream"> Поток. </param>
+		/// <param name="encoding"> Кодировка. </param>
+		public void SaveResponse(Uri responseUrl, Stream stream, Encoding encoding)
+		{
+			ResponseUrl = responseUrl;
 
-        public void SaveCookies(CookieCollection cookies)
-        {
-            Cookies.AddFrom(ResponseUrl, cookies);
-        }
-
-        public void SaveResponse(Uri responseUrl, Stream stream, Encoding encoding)
-        {
-            ResponseUrl = responseUrl;
-
-            using (var reader = new StreamReader(stream, encoding))
-                Response = reader.ReadToEnd();
-        }
-
-        public void LoadResultTo(HtmlDocument htmlDocument)
-        {
-            htmlDocument.LoadHtml(Response);
-        }
-    }
+			using (var reader = new StreamReader(stream: stream, encoding: encoding))
+			{
+				Response = reader.ReadToEnd();
+			}
+		}
+	}
 }

@@ -1,34 +1,42 @@
-﻿using VkNet.Utils;
+﻿using System;
+using VkNet.Utils;
 
 namespace VkNet.Model
 {
-    /// <summary>
-    /// Улица
-    /// </summary>
-    public class Street
-    {
-        /// <summary>
-        /// Идентификатор улицы
-        /// </summary>
-        public long Id { get; set; }
+	/// <summary>
+	/// Улица
+	/// </summary>
+	[Serializable]
+	public class Street
+	{
+		/// <summary>
+		/// Идентификатор улицы
+		/// </summary>
+		public long Id { get; set; }
 
-        /// <summary>
-        /// Название улицы
-        /// </summary>
-        public string Title { get; set; }
+		/// <summary>
+		/// Название улицы
+		/// </summary>
+		public string Title { get; set; }
 
-        #region Internal Methods
+	#region public Methods
 
-        internal static Street FromJson(VkResponse response)
-        {
-            var street = new Street();
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Street FromJson(VkResponse response)
+		{
+			var street = new Street
+			{
+					Id = response[key: "sid"] ?? response[key: "id"]
+					, Title = response[key: "name"]
+			};
 
-            street.Id = response["sid"];
-            street.Title = response["name"];
+			return street;
+		}
 
-            return street;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

@@ -1,63 +1,99 @@
+using System;
+using System.Diagnostics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using VkNet.Utils;
+
 namespace VkNet.Model
 {
-    using System;
-    using System.Diagnostics;
+	/// <summary>
+	/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+	/// </summary>
+	[DebuggerDisplay(value: "Id = {Id}, TaggedName = {TaggedName}")]
+	[Serializable]
+	public class Tag
+	{
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public long? Id { get; set; }
 
-    using Utils;
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public string TaggedName { get; set; }
 
-    /// <summary>
-    /// Отметка к видеозаписи.
-    /// См. описание <see href="http://vk.com/dev/tag.getTags"/>.
-    /// </summary>
-    [DebuggerDisplay("Id = {Id}, Name = {Name}")]
-    public class Tag
-    {
-        /// <summary>
-        /// Идентификатор отметки.
-        /// </summary>
-        public long? Id { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public long? UserId { get; set; }
 
-        /// <summary>
-        /// Название отметки.
-        /// </summary>
-        public string Name { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public long? PlacerId { get; set; }
 
-        /// <summary>
-        /// Идентификатор пользователя, которому соответствует отметка.
-        /// </summary>
-        public long? UserId { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		[JsonConverter(converterType: typeof(UnixDateTimeConverter))]
+		public DateTime? Date { get; set; }
 
-        /// <summary>
-        /// Идентификатор пользователя, сделавшего отметку.
-        /// </summary>
-        public long? PlacerId { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: true - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, false - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public bool? IsViewed { get; set; }
 
-        /// <summary>
-        /// Дата добавления отметки.
-        /// </summary>
-        public DateTime? Date { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		/// пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public decimal? X { get; set; }
 
-        /// <summary>
-        /// Статус отметки: true - подтвержденная, false - не подтвержденная.
-        /// </summary>
-        public bool? IsViewed { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		/// пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public decimal? Y { get; set; }
 
-        #region Методы
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		/// пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public decimal? X2 { get; set; }
 
-        internal static Tag FromJson(VkResponse tag)
-        {
-            var result = new Tag();
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		/// пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public decimal? Y2 { get; set; }
 
-            result.Id = tag["tag_id"];
-            result.Name = tag["tagged_name"];
-            result.UserId = tag["uid"];
-            result.PlacerId = tag["placer_id"];
-            result.Date = tag["tag_created"] ?? tag["date"];
-            result.IsViewed = tag["viewed"];
+	#region пїЅпїЅпїЅпїЅпїЅпїЅ
 
-            return result;
-        }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ json.
+		/// </summary>
+		/// <param name="response"> пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. </param>
+		/// <returns> </returns>
+		public static Tag FromJson(VkResponse response)
+		{
+			var result = new Tag
+			{
+					Id = response[key: "tag_id"]
+					, TaggedName = response[key: "tagged_name"]
+					, UserId = response[key: "user_id"] ?? response[key: "uid"]
+					, PlacerId = response[key: "placer_id"]
+					, Date = response[key: "tag_created"] ?? response[key: "date"]
+					, IsViewed = response[key: "viewed"]
+					, X = response[key: "x"]
+					, Y = response[key: "y"]
+					, X2 = response[key: "x2"]
+					, Y2 = response[key: "y2"]
+			};
 
-        #endregion
-    }
+			return result;
+		}
+
+	#endregion
+	}
 }

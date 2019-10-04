@@ -1,38 +1,58 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace VkNet.Model.Attachments
 {
 	/// <summary>
-	/// Приложенный объект, имеющий идентификатор и владельца.
+	/// РњРµРґРёР° РІР»РѕР¶РµРЅРёРµ.
 	/// </summary>
+	[Serializable]
 	public abstract class MediaAttachment
 	{
-		private static readonly IDictionary<Type, string> Types = new Dictionary<Type, string>();  
+		/// <summary>
+		/// РљРѕР»Р»РµРєС†РёСЏ РІР»РѕР¶РµРЅРёР№
+		/// </summary>
+		private static readonly IDictionary<Type, string> Types = new Dictionary<Type, string>();
 
 		/// <summary>
-		/// Идентификатор приложенного объекта.
+		/// РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІР»РѕР¶РµРЅРµРёСЏ.
 		/// </summary>
-		public long Id { get; set; }
+		[JsonProperty("id")]
+		public long? Id { get; set; }
 
 		/// <summary>
-		/// Идентификатор владельца приложенного объекта.
+		/// РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІР»Р°РґРµР»СЊС†Р° РІР»РѕР¶РµРЅРёСЏ.
 		/// </summary>
+		[JsonProperty("owner_id")]
 		public long? OwnerId { get; set; }
 
+		/// <summary>
+		/// РџСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ РІР»РѕР¶РµРЅРёРµ РІ СЃС‚СЂРѕРєСѓ.
+		/// </summary>
 		public override string ToString()
 		{
-			return string.Format("{0}{1}_{2}", MatchType(GetType()), OwnerId, Id);
+			return $"{MatchType(type: GetType())}{OwnerId}_{Id}";
 		}
 
+		/// <summary>
+		/// Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊ С‚РёРї.
+		/// </summary>
+		/// <param name="type"> С‚РёРї РІР»РѕР¶РµРЅРёСЏ. </param>
+		/// <param name="match"> РЎРѕРѕС‚РІРµС‚СЃС‚РІРёРµ. </param>
 		protected static void RegisterType(Type type, string match)
 		{
-			Types.Add(type, match);
+			Types.Add(key: type, value: match);
 		}
 
+		/// <summary>
+		/// РЎРѕРѕС‚РІРµС‚СЃС‚РІРёРµ С‚РёРїСѓ.
+		/// </summary>
+		/// <param name="type"> РўРёРї РІР»РѕР¶РµРЅРёСЏ. </param>
+		/// <returns> </returns>
 		private static string MatchType(Type type)
 		{
-			return Types[type];
+			return Types[key: type];
 		}
 	}
 }

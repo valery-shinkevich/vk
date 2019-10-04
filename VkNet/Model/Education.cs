@@ -1,82 +1,98 @@
-﻿namespace VkNet.Model
+﻿using System;
+using VkNet.Utils;
+
+namespace VkNet.Model
 {
-    using VkNet.Utils;
+	/// <summary>
+	/// Информация о высшем учебном заведении пользователя.
+	/// См. описание http://vk.com/dev/fields
+	/// </summary>
+	[Serializable]
+	public class Education
+	{
+		/// <summary>
+		/// Идентификатор университета.
+		/// </summary>
+		public long? UniversityId { get; set; }
 
-    /// <summary>
-    /// Информация о высшем учебном заведении пользователя.
-    /// См. описание <see href="http://vk.com/dev/fields"/>. Раздел education.
-    /// </summary>
-    public class Education
-    {
-        /// <summary>
-        /// Идентификатор университета.
-        /// </summary>
-        public long? UniversityId { get; set; }
+		/// <summary>
+		/// Название ВУЗа.
+		/// </summary>
+		public string UniversityName { get; set; }
 
-        /// <summary>
-        /// Название ВУЗа.
-        /// </summary>
-        public string UniversityName { get; set; }
+		/// <summary>
+		/// Идентификатор факультета.
+		/// </summary>
+		public long? FacultyId { get; set; }
 
-        /// <summary>
-        /// Идентификатор факультета.
-        /// </summary>
-        public long? FacultyId { get; set; }
+		/// <summary>
+		/// Название факультета.
+		/// </summary>
+		public string FacultyName { get; set; }
 
-        /// <summary>
-        /// Название факультета.
-        /// </summary>
-        public string FacultyName { get; set; }
+		/// <summary>
+		/// Год окончания.
+		/// </summary>
+		public int? Graduation { get; set; }
 
-        /// <summary>
-        /// Год окончания.
-        /// </summary>
-        public int? Graduation { get; set; }
+	#region Методы
 
-        #region Поля, установленные экспериментально
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Education FromJson(VkResponse response)
+		{
+			if (response[key: "university"] == null || response[key: "university"].ToString() == "0")
+			{
+				return null;
+			}
 
-        /// <summary>
-        /// Форма обучения.
-        /// </summary>
-        public string EducationForm { get; set; }
+			var education = new Education
+			{
+					UniversityId = Utilities.GetNullableLongId(response: response[key: "university"])
+					, UniversityName = response[key: "university_name"]
+					, FacultyId = Utilities.GetNullableLongId(response: response[key: "faculty"])
+					, FacultyName = response[key: "faculty_name"]
+					, Graduation = (int?) Utilities.GetNullableLongId(response: response[key: "graduation"])
+			};
 
-        /// <summary>
-        /// Текущий статус пользователя в высшем учебном заведении.
-        /// </summary>
-        public string EducationStatus { get; set; }
+			if (education.UniversityId.HasValue && education.UniversityId == 0)
+			{
+				education.UniversityId = null;
+			}
 
-        #endregion
+			if (education.FacultyId.HasValue && education.FacultyId == 0)
+			{
+				education.FacultyId = null;
+			}
 
-        #region Методы
+			if (education.Graduation.HasValue && education.Graduation == 0)
+			{
+				education.Graduation = null;
+			}
 
-        internal static Education FromJson(VkResponse response)
-        {   
-            if (response["university"] == null || response["university"].ToString() == "0")
-                return null;
+			education.EducationForm = response[key: "education_form"]; // установлено экcпериментальным путем
+			education.EducationStatus = response[key: "education_status"]; // установлено экcпериментальным путем
 
-            var education = new Education();
+			return education;
+		}
 
-            education.UniversityId = Utilities.GetNullableLongId(response["university"]);
-            education.UniversityName = response["university_name"];
-            education.FacultyId = Utilities.GetNullableLongId(response["faculty"]);
-            education.FacultyName = response["faculty_name"];
-            education.Graduation = (int?) Utilities.GetNullableLongId(response["graduation"]);
+	#endregion
 
-            if (education.UniversityId.HasValue && education.UniversityId == 0)
-                education.UniversityId = null;
+	#region Поля, установленные экспериментально
 
-            if (education.FacultyId.HasValue && education.FacultyId == 0)
-                education.FacultyId = null;
+		/// <summary>
+		/// Форма обучения.
+		/// </summary>
+		public string EducationForm { get; set; }
 
-            if (education.Graduation.HasValue && education.Graduation == 0)
-                education.Graduation = null;
+		/// <summary>
+		/// Текущий статус пользователя в высшем учебном заведении.
+		/// </summary>
+		public string EducationStatus { get; set; }
 
-            education.EducationForm = response["education_form"]; // установлено экcпериментальным путем
-            education.EducationStatus = response["education_status"]; // установлено экcпериментальным путем
-
-            return education;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

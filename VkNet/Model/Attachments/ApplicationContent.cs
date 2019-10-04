@@ -1,47 +1,58 @@
+using System;
 using VkNet.Utils;
 
 namespace VkNet.Model.Attachments
 {
 	/// <summary>
-    /// Контент приложения.
-    /// См. описание <see href="http://vk.com/dev/attachments_w"/>. Раздел "Контент приложения".
-    /// </summary>
-    public class ApplicationContent
-    {
-        /// <summary>
-        /// Идентификатор приложения, разместившего запись на стене.
-        /// </summary>
-        public long Id { get; set; }
+	/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+	/// пїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ http://vk.com/dev/attachments_w
+	/// </summary>
+	[Serializable]
+	public class ApplicationContent : MediaAttachment
+	{
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		static ApplicationContent()
+		{
+			RegisterType(type: typeof(ApplicationContent), match: "app");
+		}
 
-        /// <summary>
-        /// Название приложения.
-        /// </summary>
-        public string Name { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public string Name { get; set; }
 
-        /// <summary>
-        /// Адрес изображения для предпросмотра.
-        /// </summary>
-        public string Photo130 { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public string Photo130 { get; set; }
 
-        /// <summary>
-        /// Адрес полноразмерного изображения. 
-        /// </summary>
-        public string Photo604 { get; set; }
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+		/// </summary>
+		public string Photo604 { get; set; }
 
-        #region Методы
+	#region пїЅпїЅпїЅпїЅпїЅпїЅ
 
-        internal static ApplicationContent FromJson(VkResponse response)
-        {
-            var application = new ApplicationContent();
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ json.
+		/// </summary>
+		/// <param name="response"> пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. </param>
+		/// <returns> </returns>
+		public static ApplicationContent FromJson(VkResponse response)
+		{
+			var application = new ApplicationContent
+			{
+					Id = response[key: "id"]
+					, Name = response[key: "name"]
+					, Photo130 = response[key: "photo_130"]
+					, Photo604 = response[key: "photo_604"]
+			};
 
-            application.Id = response["id"];
-            application.Name = response["name"];
-            application.Photo130 = response["photo_130"];
-            application.Photo604 = response["photo_604"];
+			return application;
+		}
 
-            return application;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

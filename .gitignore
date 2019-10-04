@@ -8,4 +8,10 @@ obj/
 .nuget/
 Debug/
 Release/
+.idea/
 
+/GCopLog.txt
+*/**/.vs/*
+.vs/*
+/VkNet.UWP/*.lock.json
+/VkNet/Categories/Obsolete/

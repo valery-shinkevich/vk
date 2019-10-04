@@ -1,46 +1,55 @@
-﻿namespace VkNet.Exception
+﻿using System;
+using VkNet.Utils;
+
+namespace VkNet.Exception
 {
-    using System;
-    using System.Runtime.Serialization;
+	/// <summary>
+	/// Базовый класс для всех исключений, выбрасываемых библиотекой.
+	/// </summary>
+	[Serializable]
+	public class VkApiException : System.Exception
+	{
+		/// <summary>
+		/// Инициализирует новый экземпляр класса VkApiException
+		/// </summary>
+		public VkApiException()
+		{
+		}
 
-    /// <summary>
-    /// Базовый класс для всех исключений, выбрасываемых библиотекой.
-    /// </summary>
-    [Serializable]
-    public class VkApiException : Exception
-    {
-        /// <summary>
-        /// Инициализирует новый экземпляр класса <see cref="VkApiException"/>.
-        /// </summary>
-        public VkApiException()
-        {
-        }
+		/// <summary>
+		/// Инициализирует новый экземпляр класса VkApiException
+		/// </summary>
+		/// <param name="message"> Описание исключения. </param>
+		public VkApiException(string message) : base(message: message)
+		{
+		}
 
-        /// <summary>
-        /// Инициализирует новый экземпляр класса <see cref="VkApiException"/> с указанным описанием.
-        /// </summary>
-        /// <param name="message">Описание исключения.</param>
-        public VkApiException(string message) : base(message)
-        {
-        }
+		/// <summary>
+		/// Инициализирует новый экземпляр класса VkApiException
+		/// </summary>
+		/// <param name="response"> Ответ от сервера vk </param>
+		public VkApiException(VkResponse response) : base(message: response[key: "error_msg"])
+		{
+			ErrorCode = response[key: "error_code"];
+		}
 
-        /// <summary>
-        /// Инициализирует новый экземпляр класса <see cref="InvalidParameterException"/> с указанным описанием и внутренним исключением.
-        /// </summary>
-        /// <param name="message">Описание исключения.</param>
-        /// <param name="innerException">Внутреннее исключение.</param>
-        public VkApiException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+		/// <summary>
+		/// Инициализирует новый экземпляр класса InvalidParameterException
+		/// </summary>
+		/// <param name="message"> Описание исключения. </param>
+		/// <param name="innerException"> Внутреннее исключение. </param>
+		public VkApiException(string message, System.Exception innerException) : base(message: message, innerException: innerException)
+		{
+		}
 
-        /// <summary>
-        /// Инициализирует новый экземпляр класса <see cref="VkApiException"/> на основе ранее сериализованных данных.
-        /// </summary>
-        /// <param name="info">Содержит все данные, необходимые для десериализации.</param>
-        /// <param name="context">Описывает источник и назначение данного сериализованного потока и предоставляет дополнительный, 
-        /// определяемый вызывающим, контекст.</param>
-        protected VkApiException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-    }
+		/// <summary>
+		/// Код ошибки
+		/// </summary>
+		public int ErrorCode { get; internal set; }
+
+		/// <summary>
+		/// Параметры запроса
+		/// </summary>
+		public VkParameters RequestParams { get; set; }
+	}
 }

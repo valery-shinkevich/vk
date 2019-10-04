@@ -1,35 +1,43 @@
-﻿namespace VkNet.Model
+﻿using System;
+using VkNet.Utils;
+
+namespace VkNet.Model
 {
-    using VkNet.Utils;
+	/// <summary>
+	/// Информация о репостах записи.
+	/// См. описание http://vk.com/dev/post
+	/// </summary>
+	[Serializable]
+	public class Reposts
+	{
+		/// <summary>
+		/// Число пользователей, скопировавших запись.
+		/// </summary>
+		public int Count { get; set; }
 
-    /// <summary>
-    /// Информация о репостах записи. 
-    /// См. описание <see href="http://vk.com/dev/post"/>. Раздел reposts.
-    /// </summary>
-    public class Reposts
-    {
-        /// <summary>
-        /// Число пользователей, скопировавших запись.
-        /// </summary>
-        public int Count { get; set; }
+		/// <summary>
+		/// Наличие репоста от текущего пользователя .
+		/// </summary>
+		public bool UserReposted { get; set; }
 
-        /// <summary>
-        /// Наличие репоста от текущего пользователя .
-        /// </summary>
-        public bool UserReposted { get; set; }
+	#region Методы
 
-        #region Методы
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Reposts FromJson(VkResponse response)
+		{
+			var reposts = new Reposts
+			{
+					Count = response[key: "count"]
+					, UserReposted = response[key: "user_reposted"]
+			};
 
-        internal static Reposts FromJson(VkResponse response)
-        {
-            var reposts = new Reposts();
+			return reposts;
+		}
 
-            reposts.Count = response["count"];
-            reposts.UserReposted = response["user_reposted"];
-
-            return reposts;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

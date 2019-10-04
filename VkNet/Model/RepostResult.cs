@@ -1,48 +1,54 @@
+using System;
 using VkNet.Utils;
 
 namespace VkNet.Model
 {
 	/// <summary>
-	/// Результат копирования записи на стену и информация о ней.
+	/// Р РµР·СѓР»СЊС‚Р°С‚ Р·Р°РїСЂРѕСЃР° wall.Repost
 	/// </summary>
+	[Serializable]
 	public class RepostResult
 	{
 		/// <summary>
-		/// Результат копирования
+		/// РІСЃРµРіРґР° СЃРѕРґРµСЂР¶РёС‚ 1;
 		/// </summary>
 		public bool Success { get; set; }
 
 		/// <summary>
-		/// Идентификатор созданной записи
+		/// РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРѕР·РґР°РЅРЅРѕР№ Р·Р°РїРёСЃРё;
 		/// </summary>
 		public long? PostId { get; set; }
 
 		/// <summary>
-		/// Число копирований исходной записи с учетом осуществленного
+		/// РєРѕР»РёС‡РµСЃС‚РІРѕ СЂРµРїРѕСЃС‚РѕРІ РѕР±СЉРµРєС‚Р° СЃ СѓС‡РµС‚РѕРј РѕСЃСѓС‰РµСЃС‚РІР»РµРЅРЅРѕРіРѕ;
 		/// </summary>
 		public int? RepostsCount { get; set; }
 
 		/// <summary>
-		/// Число отметок "Мне нравится" у исходной записи
+		/// С‡РёСЃР»Рѕ РѕС‚РјРµС‚РѕРє В«РњРЅРµ РЅСЂР°РІРёС‚СЃСЏВ» Сѓ РѕР±СЉРµРєС‚Р°.
 		/// </summary>
 		public int? LikesCount { get; set; }
 
+	#region пїЅпїЅпїЅпїЅпїЅпїЅ
 
-		#region Методы
-
-		internal static RepostResult FromJson(VkResponse response)
+		/// <summary>
+		/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ json.
+		/// </summary>
+		/// <param name="response"> пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. </param>
+		/// <returns> </returns>
+		public static RepostResult FromJson(VkResponse response)
 		{
-			var result = new RepostResult();
-
-			result.Success = response["success"];
-			result.PostId = response["post_id"];
-			result.RepostsCount = response["reposts_count"];
-			result.LikesCount = response["likes_count"];
+			var result = new RepostResult
+			{
+					Success = response[key: "success"]
+					, PostId = response[key: "post_id"]
+					, RepostsCount = response[key: "reposts_count"]
+					, LikesCount = response[key: "likes_count"]
+			};
 
 			return result;
 		}
 
-		#endregion
-
+	#endregion
 	}
 }

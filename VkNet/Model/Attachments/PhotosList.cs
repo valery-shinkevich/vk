@@ -1,23 +1,33 @@
-﻿using VkNet.Utils;
+﻿using System;
+using VkNet.Model.Attachments;
+using VkNet.Utils;
 
-namespace VkNet.Model.Attachments
+namespace VkNet.UWP.Model.Attachments
 {
-    public class PhotosList : MediaAttachment
-    {
-        static PhotosList()
-        {
-            RegisterType(typeof(PhotosList), "photos_list");
-        }
+	/// <summary>
+	/// </summary>
+	[Obsolete(message: "Для версии API ниже 5.0")]
+	[Serializable]
+	public class PhotosList : MediaAttachment
+	{
+		static PhotosList()
+		{
+			RegisterType(type: typeof(PhotosList), match: "photos_list");
+		}
 
-        #region Private Methods
+	#region Private Methods
 
-        internal static PhotosList FromJson(VkResponse response)
-        {
-            var list = new PhotosList();
+		/// <summary>
+		/// </summary>
+		/// <param name="response"> </param>
+		/// <returns> </returns>
+		public static PhotosList FromJson(VkResponse response)
+		{
+			var list = new PhotosList();
 
-            return list;
-        }
+			return list;
+		}
 
-        #endregion
-    }
+	#endregion
+	}
 }

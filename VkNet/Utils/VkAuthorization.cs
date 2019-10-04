@@ -1,142 +1,161 @@
-﻿namespace VkNet.Utils
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using VkNet.Exception;
+using VkNet.Infrastructure;
+
+namespace VkNet.Utils
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
+	/// <summary>
+	/// Информация об авторизации приложения на действия.
+	/// </summary>
+	public class VkAuthorization
+	{
+		/// <summary>
+		/// Список наименования полей.
+		/// </summary>
+		private readonly Dictionary<string, string> _nameValues;
 
-    using Exception;
+		/// <summary>
+		/// Конструктор.
+		/// </summary>
+		/// <param name="uriFragment"> URL ответа. </param>
+		private VkAuthorization(string uriFragment)
+		{
+			_nameValues = Decode(urlFragment: uriFragment);
+		}
 
-    /// <summary>
-    /// Информация об авторизации приложения на действия.
-    /// </summary>
-    public class VkAuthorization
-    {
-        private readonly List<NameValue> _decodedAnswer;
+		/// <summary>
+		/// Возвращает признак была ли авторизация успешной.
+		/// </summary>
+		public bool IsAuthorized => _nameValues.ContainsKey(key: Constants.AccessToken);
 
-        private VkAuthorization(Uri responseUrl)
-        {
-            _decodedAnswer = Decode(responseUrl);
-        }
+		/// <summary>
+		/// Проверяет требуется ли получения у авторизации на запрошенные приложением
+		/// действия (при установке приложения
+		/// пользователю).
+		/// </summary>
+		public bool IsAuthorizationRequired => _nameValues.ContainsKey(key: "__q_hash");
 
-        /// <summary>
-        /// Извлекает из URL, на которую произошло перенаправление при авторизации, информацию об авторизации.
-        /// </summary>
-        /// <param name="responseUrl">
-        /// URL, на которую произошло перенаправление при авторизации.
-        /// </param>
-        /// <returns>Информация об авторизации.</returns>
-        public static VkAuthorization From(Uri responseUrl)
-        {
-            return new VkAuthorization(responseUrl);
-        }
+		/// <summary>
+		/// Маркер доступа, который необходимо использовать для доступа к API ВКонтакте.
+		/// </summary>
+		public string AccessToken => GetFieldValue(fieldName: Constants.AccessToken);
 
-        /// <summary>
-        /// Возвращает признак была ли авторизация успешной.
-        /// </summary>
-        public bool IsAuthorized
-        {
-            get { return AccessToken != null; }
-        }
+		/// <summary>
+		/// Время истечения срока действия маркера доступа.
+		/// </summary>
+		public int ExpiresIn => GetExpiresIn();
 
-        /// <summary>
-        /// Проверяет требуется ли получения у авторизации на запрошенные приложением действия (при установке приложения пользователю).
-        /// </summary>
-        public bool IsAuthorizationRequired
-        {
-            get { return GetFieldValue("__q_hash") != null; }
-        }
+		/// <summary>
+		/// Произвольная строка, которая будет возвращена вместе с результатом авторизации.
+		/// </summary>
+		public string State => GetFieldValue(fieldName: "state");
 
-        /// <summary>
-        /// Маркер доступа, который необходимо использовать для доступа к API ВКонтакте.
-        /// </summary>
-        public string AccessToken
-        {
-            get { return GetFieldValue("access_token"); }
-        }
+		/// <summary>
+		/// Идентификатор пользователя, у которого работает приложение (от имени которого
+		/// был произведен вход).
+		/// </summary>
+		public long UserId => GetUserId();
 
-        /// <summary>
-        /// Время истечения срока действия маркера доступа.
-        /// </summary>
-        public string ExpiresIn
-        {
-            get { return GetFieldValue("expires_in"); }
-        }
+		/// <summary>
+		/// E-mail пользователя, у которого работает приложение (от имени которого был
+		/// произведен вход).
+		/// </summary>
+		public string Email => GetFieldValue(fieldName: "email");
 
-        /// <summary>
-        /// Идентификатор пользователя, у которого работает приложение (от имени которого был произведен вход).
-        /// </summary>
-        public long UserId
-        {
-            get
-            {
-                var userIdFieldValue = GetFieldValue("user_id");
-                long userId;
-                if (!long.TryParse(userIdFieldValue, out userId))
-                    throw new VkApiException("UserId is not integer value.");
+		/// <summary>
+		/// ID капчи, если она появилась
+		/// </summary>
+		public bool IsCaptchaNeeded => _nameValues.ContainsKey(key: "sid");
 
-                return userId;
-            }
-        }
+		/// <summary>
+		/// ID капчи, если она появилась
+		/// </summary>
+		public long CaptchaSid => GetCaptchaSid();
 
-        /// <summary>
-        /// ID капчи, если она появилась
-        /// </summary>
-        public long? CaptchaID
-        {
-            get
-            {
-                var SidFieldValue = GetFieldValue("sid");
-                long sid;
-                if (long.TryParse(SidFieldValue, out sid))
-                    return sid;
+		/// <summary>
+		/// Извлекает из URL, на которую произошло перенаправление при авторизации,
+		/// информацию об авторизации.
+		/// </summary>
+		/// <param name="uriFragment">
+		/// URL, на которую произошло перенаправление при авторизации.
+		/// </param>
+		/// <returns> Информация об авторизации. </returns>
+		public static VkAuthorization From(string uriFragment)
+		{
+			return new VkAuthorization(uriFragment: uriFragment);
+		}
 
-                return null;
-            }
-        }
+		/// <summary>
+		/// Получить значение поля.
+		/// </summary>
+		/// <param name="fieldName"> Наименование поля. </param>
+		/// <returns> Значение поля. </returns>
+		private string GetFieldValue(string fieldName)
+		{
+			return _nameValues.ContainsKey(key: fieldName)
+				? _nameValues[key: fieldName]
+				: throw new KeyNotFoundException(message: fieldName);
+		}
 
-        private string GetFieldValue(string fieldName)
-        {
-            return _decodedAnswer.Where(i => i.Name == fieldName).Select(i => i.Value).FirstOrDefault();
-        }
+		/// <summary>
+		/// Расшифровывает указанный URL.
+		/// </summary>
+		/// <param name="urlFragment"> URL. </param>
+		/// <returns> Список наименования полей. </returns>
+		private static Dictionary<string, string> Decode(string urlFragment)
+		{
+			var uri = new Uri(uriString: urlFragment);
 
-        internal sealed class NameValue
-        {
-            public string Name { get; set; }
+			if (string.IsNullOrWhiteSpace(value: uri.Query) && string.IsNullOrWhiteSpace(value: uri.Fragment))
+			{
+				return new Dictionary<string, string>();
+			}
 
-            public string Value { get; set; }
+			var query = string.IsNullOrWhiteSpace(value: uri.Query)
+				? uri.Fragment.Substring(startIndex: 1)
+				: uri.Query.Substring(startIndex: 1);
 
-            public NameValue(string name, string value)
-            {
-                Name = name;
-                Value = value;
-            }
+			return query.Split(separator: new[] { '&' }, options: StringSplitOptions.RemoveEmptyEntries)
+				.Select(selector: s => s.Split('='))
+				.ToDictionary(keySelector: s => s[0], elementSelector: s => s[1]);
+		}
 
-            public override string ToString()
-            {
-                return string.Format("{0}={1}", Name, Value);
-            }
-        }
+		private int GetExpiresIn()
+		{
+			var expiresInValue = GetFieldValue(fieldName: "expires_in");
 
-        private static List<NameValue> Decode(Uri url)
-        {
-            if (!string.IsNullOrEmpty(url.Query))
-                return DecodeQuery(url);
+			if (!int.TryParse(s: expiresInValue, result: out var expiresIn))
+			{
+				throw new VkApiException(message: "ExpiresIn is not integer value.");
+			}
 
-            return DecodeFragment(url);
-        }
+			return expiresIn;
+		}
 
-        private static List<NameValue> DecodeQuery(Uri url)
-        {
-            var urlQuery = url.Query;
-            var query = urlQuery.StartsWith("?") || urlQuery.StartsWith("#") ? urlQuery.Substring(1) : urlQuery;
-            return query.Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Split('=')).Select(s => new NameValue(s[0], s[1])).ToList();
-        }
+		private long GetUserId()
+		{
+			var userIdFieldValue = GetFieldValue(fieldName: "user_id");
 
-        private static List<NameValue> DecodeFragment(Uri url)
-        {
-            var urlQuery = url.Fragment;
-            var query = urlQuery.StartsWith("#") ? urlQuery.Substring(1) : urlQuery;
-            return query.Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Split('=')).Select(s => new NameValue(s[0], s[1])).ToList();
-        }
-    }
+			if (!long.TryParse(s: userIdFieldValue, result: out var userId))
+			{
+				throw new VkApiException(message: "UserId is not long value.");
+			}
+
+			return userId;
+		}
+
+		private long GetCaptchaSid()
+		{
+			var userIdFieldValue = GetFieldValue(fieldName: "sid");
+
+			if (!long.TryParse(s: userIdFieldValue, result: out var userId))
+			{
+				throw new VkApiException(message: "sid is not long value.");
+			}
+
+			return userId;
+		}
+	}
 }

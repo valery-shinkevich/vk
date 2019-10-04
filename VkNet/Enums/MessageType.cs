@@ -1,18 +1,21 @@
-﻿namespace VkNet.Enums
-{
-    /// <summary>
-    /// Тип сообщения.
-    /// </summary>
-    public enum MessageType
-    {
-        /// <summary>
-        /// Полученное сообщение.
-        /// </summary>
-        Received = 0,
+﻿using System;
 
-        /// <summary>
-        /// Отправленное сообщение.
-        /// </summary>
-        Sended = 1
-    }
+namespace VkNet.Enums
+{
+	/// <summary>
+	/// Тип сообщения.
+	/// </summary>
+	[Serializable]
+	public enum MessageType
+	{
+		/// <summary>
+		/// Полученное сообщение.
+		/// </summary>
+		Received = 0,
+
+		/// <summary>
+		/// Отправленное сообщение.
+		/// </summary>
+		Sended = 1
+	}
 }

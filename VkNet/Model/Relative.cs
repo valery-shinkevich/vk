@@ -1,11 +1,16 @@
-﻿namespace VkNet.Model
-{
-	using VkNet.Utils;
+﻿using System;
+using Newtonsoft.Json;
+using VkNet.Enums.SafetyEnums;
+using VkNet.Utils;
+using VkNet.Utils.JsonConverter;
 
+namespace VkNet.Model
+{
 	/// <summary>
 	/// Информация о родственнике.
-	/// См. описание <see href="http://vk.com/dev/fields"/>. Раздел relatives.
+	/// См. описание http://vk.com/dev/fields
 	/// </summary>
+	[Serializable]
 	public class Relative
 	{
 		/// <summary>
@@ -16,32 +21,33 @@
 		/// <summary>
 		/// Тип родственника (sibling и т.п.)
 		/// </summary>
-		public string Type { get; set; }
+		[JsonConverter(typeof(SafetyEnumJsonConverter))]
+		public RelativeType Type { get; set; }
 
 		/// <summary>
 		/// Имя родственника, если он не является пользователем ВКонтакте.
 		/// </summary>
 		public string Name { get; set; }
 
-		#region Методы
+	#region Методы
 
-		internal static Relative FromJson(VkResponse response)
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Relative FromJson(VkResponse response)
 		{
-			var relative = new Relative();
-
-			// Согласно документации VK API, должно возвращаться поле id, однако фактически может возвращаться uid (для старых версий API).
-			// Можно будет парсить только id после перевода всех методов на более новые версии (как минимум Users.Search).
-			if (response.ContainsKey("id"))
-				relative.Id = response["id"];
-			else if (response.ContainsKey("uid"))
-				relative.Id = response["uid"];
-			
-			relative.Type = response["type"];
-			relative.Name = response["name"];
+			var relative = new Relative
+			{
+					Id = response[key: "user_id"] ?? response[key: "uid"] ?? response[key: "id"]
+					, Type = response[key: "type"]
+					, Name = response[key: "name"]
+			};
 
 			return relative;
 		}
 
-		#endregion
+	#endregion
 	}
 }

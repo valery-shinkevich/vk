@@ -3,31 +3,36 @@ using VkNet.Utils;
 
 namespace VkNet.Model
 {
-    /// <summary>
-    /// Регион
-    /// </summary>
-    public class Region
-    {
-        /// <summary>
-        /// Идентификатор региона
-        /// </summary>
-        public int Id { get; set; }
+	/// <summary>
+	/// Регион
+	/// </summary>
+	[Serializable]
+	public class Region
+	{
+		/// <summary>
+		/// Идентификатор региона
+		/// </summary>
+		public int Id { get; set; }
 
-        /// <summary>
-        /// Название региона
-        /// </summary>
-        public string Title { get; set; }
+		/// <summary>
+		/// Название региона
+		/// </summary>
+		public string Title { get; set; }
 
-        internal static Region FromJson(VkResponse response)
-        {
-            var region = new Region();
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Region FromJson(VkResponse response)
+		{
+			var region = new Region
+			{
+					Id = response[key: "region_id"] ?? response[key: "id"]
+					, Title = response[key: "title"]
+			};
 
-            string regionId = response["region_id"];
-
-            region.Id = Convert.ToInt32(regionId);
-            region.Title = response["title"];
-
-            return region;
-        }
-    }
+			return region;
+		}
+	}
 }

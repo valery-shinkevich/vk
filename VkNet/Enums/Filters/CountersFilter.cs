@@ -1,52 +1,69 @@
 namespace VkNet.Enums.Filters
 {
 	/// <summary>
-	/// Фильтры счетчиков
+	/// Р¤РёР»СЊС‚СЂС‹ СЃС‡РµС‚С‡РёРєРѕРІ
 	/// </summary>
 	public sealed class CountersFilter : MultivaluedFilter<CountersFilter>
 	{
 		/// <summary>
-		/// Количество заявок в друзья
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°СЏРІРѕРє РІ РґСЂСѓР·СЊСЏ
 		/// </summary>
-		public static readonly CountersFilter Friends = RegisterPossibleValue(1 << 0, "friends");
-		/// <summary>
-		/// Количество непрочитанных сообщений
-		/// </summary>
-		public static readonly CountersFilter Messages = RegisterPossibleValue(1 << 1, "messages");
-		/// <summary>
-		/// Количество фото
-		/// </summary>
-		public static readonly CountersFilter Photos = RegisterPossibleValue(1 << 2, "photos");
-		/// <summary>
-		/// Количество видео
-		/// </summary>
-		public static readonly CountersFilter Videos = RegisterPossibleValue(1 << 3, "videos");
-		/// <summary>
-		/// Количество заметок
-		/// </summary>
-		public static readonly CountersFilter Notes = RegisterPossibleValue(1 << 4, "notes");
-		/// <summary>
-		/// Количество подарков
-		/// </summary>
-		public static readonly CountersFilter Gifts = RegisterPossibleValue(1 << 5, "gifts");
-		/// <summary>
-		/// Количество событий
-		/// </summary>
-		public static readonly CountersFilter Events = RegisterPossibleValue(1 << 6, "events");
-		/// <summary>
-		/// Количество групп
-		/// </summary>
-		public static readonly CountersFilter Groups = RegisterPossibleValue(1 << 7, "groups");
-		/// <summary>
-		/// Количество уведомлений
-		/// </summary>
-		public static readonly CountersFilter Notifications = RegisterPossibleValue(1 << 8, "notifications");
-		
-		/// <summary>
-		/// Все фильтры
-		/// </summary>
-		public static readonly CountersFilter All = Friends | Messages | Photos | Videos
-			| Notes | Gifts | Events | Groups | Notifications;
+		public static readonly CountersFilter Friends = RegisterPossibleValue(value: "friends");
 
+		/// <summary>
+		/// РџСЂРµРґР»Р°РіР°РµРјС‹Рµ РґСЂСѓР·СЊСЏ
+		/// </summary>
+		public static readonly CountersFilter FriendsSuggestions = RegisterPossibleValue(value: "friends_suggestions");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ РЅРµРїСЂРѕС‡РёС‚Р°РЅРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№
+		/// </summary>
+		public static readonly CountersFilter Messages = RegisterPossibleValue(value: "messages");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ С„РѕС‚Рѕ
+		/// </summary>
+		public static readonly CountersFilter Photos = RegisterPossibleValue(value: "photos");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ РІРёРґРµРѕ
+		/// </summary>
+		public static readonly CountersFilter Videos = RegisterPossibleValue(value: "videos");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕРґР°СЂРєРѕРІ
+		/// </summary>
+		public static readonly CountersFilter Gifts = RegisterPossibleValue(value: "gifts");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ СЃРѕР±С‹С‚РёР№
+		/// </summary>
+		public static readonly CountersFilter Events = RegisterPossibleValue(value: "events");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ РіСЂСѓРїРї
+		/// </summary>
+		public static readonly CountersFilter Groups = RegisterPossibleValue(value: "groups");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ СѓРІРµРґРѕРјР»РµРЅРёР№
+		/// </summary>
+		public static readonly CountersFilter Notifications = RegisterPossibleValue(value: "notifications");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ СѓРІРµРґРѕРјР»РµРЅРёР№
+		/// </summary>
+		public static readonly CountersFilter Sdk = RegisterPossibleValue(value: "sdk");
+
+		/// <summary>
+		/// РљРѕР»РёС‡РµСЃС‚РІРѕ СѓРІРµРґРѕРјР»РµРЅРёР№
+		/// </summary>
+		public static readonly CountersFilter AppRequests = RegisterPossibleValue(value: "app_requests");
+
+		/// <summary>
+		/// Р’СЃРµ С„РёР»СЊС‚СЂС‹
+		/// </summary>
+		public static readonly CountersFilter All =
+				Friends|FriendsSuggestions|Messages|Photos|Videos|Gifts|Events|Groups|Notifications|Sdk|AppRequests;
 	}
 }

@@ -1,77 +1,95 @@
-﻿using VkNet.Enums.SafetyEnums;
+﻿using System;
+using JetBrains.Annotations;
+using VkNet.Abstractions;
+using VkNet.Enums.SafetyEnums;
+using VkNet.Model;
+using VkNet.Model.RequestParams;
+using VkNet.Utils;
 
 namespace VkNet.Categories
 {
-    using System;
-    using JetBrains.Annotations;
+	/// <summary>
+	/// Служебные методы.
+	/// </summary>
+	public partial class UtilsCategory : IUtilsCategory
+	{
+		private readonly IVkApiInvoke _vk;
 
-    using Enums;
-    using Model;
-    using Utils;
+		/// <summary>
+		/// </summary>
+		/// <param name="vk"> </param>
+		public UtilsCategory(IVkApiInvoke vk)
+		{
+			_vk = vk;
+		}
 
-    /// <summary>
-    /// Служебные методы.
-    /// </summary>
-    public class UtilsCategory
-    {
-        private readonly VkApi _vk;
+		/// <inheritdoc />
+		[Pure]
+		public LinkAccessType CheckLink(string url, bool skipAuthorization = true)
+		{
+			return CheckLink(url: new Uri(uriString: url), skipAuthorization: skipAuthorization);
+		}
 
-        internal UtilsCategory(VkApi vk)
-        {
-            _vk = vk;
-        }
+		/// <inheritdoc />
+		[Pure]
+		public LinkAccessType CheckLink(Uri url, bool skipAuthorization = true)
+		{
+			var parameters = new VkParameters { { "url", url } };
 
-        /// <summary>
-        /// Возвращает информацию о том, является ли внешняя ссылка заблокированной на сайте ВКонтакте.
-        /// </summary>
-        /// <param name="url">Внешняя ссылка, которую необходимо проверить.</param>
-        /// <returns>Статус ссылки</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/utils.checkLink"/>.
-        /// </remarks>
-        [Pure]
-        public LinkAccessType CheckLink([NotNull] string url)
-        {
-            VkErrors.ThrowIfNullOrEmpty(() => url);
+			return _vk.Call(methodName: "utils.checkLink", parameters: parameters, skipAuthorization: skipAuthorization);
+		}
 
-            var parameters = new VkParameters { {"url", url} };
+		/// <inheritdoc />
+		[Pure]
+		public VkObject ResolveScreenName(string screenName)
+		{
+			VkErrors.ThrowIfNullOrEmpty(expr: () => screenName);
 
-            VkResponse response = _vk.Call("utils.checkLink", parameters, true);
-            return response;
-        }
+			var parameters = new VkParameters { { "screen_name", screenName } };
 
-        /// <summary>
-        /// Определяет тип объекта (пользователь, сообщество, приложение) и его идентификатор по короткому имени screenName.
-        /// </summary>
-        /// <param name="screenName">Короткое имя</param>
-        /// <returns>Тип объекта</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/utils.resolveScreenName"/>.
-        /// </remarks>
-        [Pure]
-        public VkObject ResolveScreenName([NotNull] string screenName)
-        {
-            VkErrors.ThrowIfNullOrEmpty(() => screenName);
+			return _vk.Call(methodName: "utils.resolveScreenName", parameters: parameters, skipAuthorization: true);
+		}
 
-            var parameters = new VkParameters {{"screen_name", screenName}};
+		/// <inheritdoc />
+		[Pure]
+		public DateTime GetServerTime()
+		{
+			return _vk.Call<DateTime>(methodName: "utils.getServerTime", parameters: VkParameters.Empty, skipAuthorization: true);
+		}
 
-            VkResponse response = _vk.Call("utils.resolveScreenName", parameters, true);
+		/// <inheritdoc />
+		public ShortLink GetShortLink(Uri url, bool isPrivate)
+		{
+			var parameters = new VkParameters
+			{
+					{ "url", url }
+					, { "private", isPrivate }
+			};
 
-            if (response == null) return null;
-            return response;
-        }
-        
-        /// <summary>
-        /// Возвращает текущее время на сервере ВКонтакте в unixtime.
-        /// </summary>
-        /// <returns>Время на сервере ВКонтакте в unixtime</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/utils.getServerTime"/>.
-        /// </remarks>
-        [Pure]
-        public DateTime GetServerTime()
-        {
-            return _vk.Call("utils.getServerTime", VkParameters.Empty, true);
-        }
-    }
+			return _vk.Call<ShortLink>(methodName: "utils.getShortLink", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool DeleteFromLastShortened(string key)
+		{
+			return _vk.Call<bool>(methodName: "utils.deleteFromLastShortened", parameters: new VkParameters { { "key", key } });
+		}
+
+		/// <inheritdoc />
+		public VkCollection<ShortLink> GetLastShortenedLinks(ulong count = 10, ulong offset = 0)
+		{
+			return _vk.Call<VkCollection<ShortLink>>(methodName: "utils.getLastShortenedLinks"
+					, parameters: new VkParameters
+					{
+							{ "count", count }
+							, { "offset", offset }
+					});
+		}
+
+		/// <inheritdoc />
+		public LinkStatsResult GetLinkStats(LinkStatsParams @params)
+		{
+			return _vk.Call<LinkStatsResult>(methodName: "utils.getLinkStats", parameters: @params);
+		}
+	}
 }

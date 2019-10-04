@@ -1,4 +1,6 @@
-﻿namespace VkNet.Enums
+﻿using VkNet.Utils;
+
+namespace VkNet.Enums
 {
 	/// <summary>
 	/// Видимость даты рождения
@@ -8,12 +10,15 @@
 		/// <summary>
 		/// Не показывать дату рождения.
 		/// </summary>
-		Invisible = 0,
-		/// <summary>
-		/// ПОказывать дату рождения.
+		[DefaultValue]
+		Invisible = 0
+
+		, /// <summary>
+		/// Показывать дату рождения.
 		/// </summary>
-		Full = 1,
-		/// <summary>
+		Full = 1
+
+		, /// <summary>
 		/// Показывать только месяц и день.
 		/// </summary>
 		OnlyDayAndMonth = 2

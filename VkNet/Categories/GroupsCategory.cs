@@ -1,351 +1,517 @@
-﻿namespace VkNet.Categories
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using VkNet.Abstractions;
+using VkNet.Enums.Filters;
+using VkNet.Enums.SafetyEnums;
+using VkNet.Model;
+using VkNet.Model.RequestParams;
+using VkNet.Utils;
+
+namespace VkNet.Categories
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.Linq;
-    using JetBrains.Annotations;
-    
-    using Enums;
-    using Enums.Filters;
-    using Enums.SafetyEnums;
-    using Model;
-    using Utils;
+	/// <inheritdoc />
+	/// <summary>
+	/// Методы для работы с сообществами (группами).
+	/// </summary>
+	public partial class GroupsCategory : IGroupsCategory
+	{
+		private readonly IVkApiInvoke _vk;
 
-    /// <summary>
-    /// Методы для работы с сообществами (группами).
-    /// </summary>
-    public class GroupsCategory
-    {
-        private readonly VkApi _vk;
+		/// <summary>
+		/// </summary>
+		/// <param name="vk"> </param>
+		public GroupsCategory(IVkApiInvoke vk)
+		{
+			_vk = vk;
+		}
 
-        internal GroupsCategory(VkApi vk)
-        {
-            _vk = vk;
-        }
+		/// <inheritdoc />
+		public bool Join(long? groupId, bool? notSure = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "not_sure", notSure }
+			};
 
-        /// <summary>
-        /// Данный метод позволяет вступить в группу, публичную страницу, а также подтверждать об участии во встрече.
-        /// </summary>
-        /// <param name="gid">Id группы</param>
-        /// <param name="notSure">True - Возможно пойду. False - Точно пойду. По умолчанию false.</param>
-        /// <returns>В случае успешного вступления в группу метод вернёт true, иначе false.</returns>
-        /// <remarks>
-        /// Для вызова этого метода Ваше приложение должно иметь права с битовой маской, содержащей <see cref="Settings.Groups"/>.
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.join"/>.
-        /// </remarks>
-        public bool Join(long gid, bool notSure = false)
-        {
-            var parameters = new VkParameters { { "gid", gid }, { "not_sure", notSure } };
+			return _vk.Call(methodName: "groups.join", parameters: parameters);
+		}
 
-            return _vk.Call("groups.join", parameters);
-        }
+		/// <inheritdoc />
+		public bool Leave(long groupId)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+			};
 
-        /// <summary>
-        /// Данный метод позволяет выходить из группы, публичной страницы, или встречи.
-        /// </summary>
-        /// <param name="gid">Id группы</param>
-        /// <returns>В случае успешного выхода из группы метод вернёт true, иначе false.</returns>
-        /// <remarks>
-        /// Для вызова этого метода Ваше приложение должно иметь права с битовой маской, содержащей <see cref="Settings.Groups"/>.
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.leave"/>.
-        /// </remarks>
-        public bool Leave(long gid)
-        {
-            var parameters = new VkParameters { { "gid", gid } };
+			return _vk.Call(methodName: "groups.leave", parameters: parameters);
+		}
 
-            return _vk.Call("groups.leave", parameters);
-        }
+		/// <inheritdoc />
+		public VkCollection<Group> Get(GroupsGetParams @params, bool skipAuthorization = false)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => @params.UserId);
+			var response = _vk.Call(methodName: "groups.get", parameters: @params, skipAuthorization: skipAuthorization);
 
-        /// <summary>
-        /// Возвращает список групп указанного пользователя.
-        /// </summary>
-        /// <param name="uid">Id пользователя</param>
-        /// <param name="extended">Возвращать полную информацию?</param>
-        /// <param name="filters">Список фильтров сообществ</param>
-        /// <param name="fields">Список полей информации о группах</param>
-        /// <param name="offset">Смещение, необходимое для выборки определённого подмножества сообществ.</param>
-        /// <param name="count">Количество сообществ, информацию о которых нужно вернуть (Максимальное значение 1000)</param>
-        /// <returns>Список групп</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.get"/>.
-        /// </remarks>
-        [Pure]
-        [ApiVersion("5.28")]
-        public ReadOnlyCollection<Group> Get(long uid, bool extended = false, GroupsFilters filters = null, GroupsFields fields = null, int offset = 0, int count = 1000)
-        {
-            var parameters = new VkParameters { { "uid", uid }, { "extended", extended }, { "filter", filters }, { "fields", fields }, { "offset", offset }, { "count", count } };
+			// в первой записи количество членов группы для (response["items"])
+			if (@params.Extended == null || !@params.Extended.Value)
+			{
+				return response.ToVkCollectionOf(selector: id => new Group { Id = id });
+			}
 
-            VkResponse response = _vk.Call("groups.get", parameters);
+			return response.ToVkCollectionOf<Group>(selector: r => r);
+		}
 
-            if (!extended)
-                return response.ToReadOnlyCollectionOf<Group>(id => new Group { Id = id });
+		/// <inheritdoc />
+		public ReadOnlyCollection<Group> GetById(IEnumerable<string> groupIds
+												, string groupId
+												, GroupsFields fields
+												, bool skipAuthorization = false)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_ids", groupIds }
+					, { "group_id", groupId }
+					, { "fields", fields }
+			};
 
-            // в первой записи количество членов группы
-            return response["items"].ToReadOnlyCollectionOf<Group>(r => r);
-        }
+			return _vk.Call(methodName: "groups.getById", parameters: parameters, skipAuthorization: skipAuthorization)
+					.ToReadOnlyCollectionOf<Group>(selector: x => x);
+		}
 
-        /// <summary>
-        /// Возвращает информацию о нескольких группах.
-        /// </summary>
-        /// <param name="gids">Список групп</param>
-        /// <param name="fields">Список полей информации о группах</param>
-        /// <returns>Список групп</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.getById"/>.
-        /// </remarks>
-        [Pure]
-        public ReadOnlyCollection<Group> GetById(IEnumerable<long> gids, GroupsFields fields = null)
-        {
-            var parameters = new VkParameters { { "gids", gids }, { "fields", fields } };
+		/// <inheritdoc />
+		public VkCollection<User> GetMembers(GroupsGetMembersParams @params, bool skipAuthorization = false)
+		{
+			return _vk.Call(methodName: "groups.getMembers", parameters: @params, skipAuthorization: skipAuthorization)
+					.ToVkCollectionOf(selector: x => @params.Fields != null ? x : new User { Id = x });
+		}
 
-            VkResponseArray response = _vk.Call("groups.getById", parameters);
-            return response.ToReadOnlyCollectionOf<Group>(x => x);
-        }
+		/// <inheritdoc />
+		public ReadOnlyCollection<GroupMember> IsMember(string groupId
+														, long? userId
+														, IEnumerable<long> userIds
+														, bool? extended
+														, bool skipAuthorization = false)
+		{
+			if (userId.HasValue)
+			{
+				if (userIds != null)
+				{
+					if (userIds.Any(predicate: id => id < 1))
+					{
+						throw new ArgumentException(message: "Идентификатор пользователя должен быть больше 0");
+					}
 
-        /// <summary>
-        /// Возвращает информацию о заданной группе.
-        /// </summary>
-        /// <param name="gid">Id группы</param>
-        /// <param name="fields">Список полей информации о группах</param>
-        /// <returns>Список групп</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.getById"/>.
-        /// </remarks>
-        [Pure]
-        public Group GetById(long gid, GroupsFields fields = null)
-        {
-            var parameters = new VkParameters { { "gid", gid }, { "fields", fields } };
+					var tempList = userIds.ToList();
+					tempList.Add(item: userId.Value);
+					userIds = tempList;
+				} else
+				{
+					if (userId.Value < 1)
+					{
+						throw new ArgumentException(message: "Идентификатор пользователя должен быть больше 0");
+					}
 
-            return _vk.Call("groups.getById", parameters)[0];
-        }
+					userIds = new List<long>
+					{
+							userId.Value
+					};
+				}
+			}
 
-        /// <summary>
-        /// Возвращает список участников группы.
-        /// </summary>
-        /// <param name="gid">Id группы</param>
-        /// <param name="totalCount">Общее количество участников</param>
-        /// <param name="count">Количество участников которое необходимо получить</param>
-        /// <param name="offset">Смещение</param>
-        /// <param name="sort">Сортировка Id пользователей</param>
-        /// <returns>Id пользователей состоящих в группе</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.getMembers"/>.
-        /// </remarks>
-        [Pure]
-        public ReadOnlyCollection<long> GetMembers(long gid, out int totalCount, int? count = null, int? offset = null, GroupsSort sort = null)
-        {
-            var parameters = new VkParameters { { "gid", gid }, { "offset", offset }, { "sort", sort } };
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "user_ids", userIds }
+					, { "extended", Convert.ToInt32(value: extended) }
+			};
 
-            if (count.HasValue && count.Value > 0 && count.Value < 1000)
-                parameters.Add("count", count);
+			var result = _vk.Call(methodName: "groups.isMember", parameters: parameters, skipAuthorization: skipAuthorization);
 
-            var response = _vk.Call("groups.getMembers", parameters, true);
+			return result.ToReadOnlyCollectionOf<GroupMember>(selector: x => x);
+		}
 
-            totalCount = response["count"];
+		/// <inheritdoc />
+		public VkCollection<Group> Search(GroupsSearchParams @params, bool skipAuthorization = false)
+		{
+			return _vk.Call(methodName: "groups.search", parameters: @params, skipAuthorization: skipAuthorization)
+					.ToVkCollectionOf<Group>(selector: r => r);
+		}
 
-            VkResponseArray users = response["users"];
-            return users.ToReadOnlyCollectionOf<long>(x => x);
-        }
+		/// <inheritdoc />
+		public VkCollection<Group> GetInvites(long? count, long? offset, bool? extended = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "offset", offset }
+					, { "count", count }
+					, { "extended", extended }
+			};
 
-        /// <summary>
-        /// Возвращает информацию о том является ли пользователь участником заданной группы.
-        /// </summary>
-        /// <param name="gid">Id группы</param>
-        /// <param name="uid">Id пользователя</param>
-        /// <returns>True если пользователь состоит в группе, иначе False</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.isMember"/>.
-        /// </remarks>
-        [Pure]
-        public bool IsMember(long gid, long uid)
-        {
-            var parameters = new VkParameters { { "gid", gid }, { "uid", uid } };
+			return _vk.Call(methodName: "groups.getInvites", parameters: parameters).ToVkCollectionOf<Group>(selector: x => x);
+		}
 
-            return _vk.Call("groups.isMember", parameters);
-        }
+		/// <inheritdoc />
+		public bool BanUser(GroupsBanUserParams @params)
+		{
+			return _vk.Call(methodName: "groups.banUser", parameters: @params);
+		}
 
-        /// <summary>
-        /// Осуществляет поиск групп по заданной подстроке.
-        /// </summary>
-        /// <param name="query">Поисковый запрос</param>
-        /// <param name="totalCount">Общее количество групп удовлетворяющих запросу</param>
-        /// <param name="offset">Смещение</param>
-        /// <param name="count">Количество в выбоке</param>
-        /// <returns>Список объектов групп</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.search"/>.
-        /// </remarks>
-        [Pure]
-        public ReadOnlyCollection<Group> Search([NotNull] string query, out int totalCount, int? offset = null, int? count = null, GroupsFields fields = null, int sort = 0)
-        {
-            VkErrors.ThrowIfNullOrEmpty(() => query);
-            
-            var parameters = new VkParameters { { "q", query }, { "offset", offset }, { "count", count }, { "fields", fields }, { "sort", sort } };
+		/// <inheritdoc />
+		public VkCollection<GetBannedResult> GetBanned(long groupId
+														, long? offset = null
+														, long? count = null
+														, GroupsFields fields = null
+														, long? ownerId = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "offset", offset }
+					, { "count", count }
+					, { "fields", fields }
+					, { "owner_id", ownerId }
+			};
 
-            VkResponseArray response = _vk.Call("groups.search", parameters);
+			return _vk.Call<VkCollection<GetBannedResult>>(methodName: "groups.getBanned", parameters: parameters);
+		}
 
-            totalCount = response[0];
+		/// <inheritdoc />
+		public bool UnbanUser(long groupId, long userId)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+			VkErrors.ThrowIfNumberIsNegative(expr: () => userId);
 
-            return response.Skip(1).ToReadOnlyCollectionOf<Group>(r => r);
-        }
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "user_id", userId }
+			};
 
-        /// <summary>
-        /// Данный метод возвращает список приглашений в сообщества и встречи.
-        /// </summary>
-        /// <param name="count">количество приглашений, которое необходимо вернуть</param>
-        /// <param name="offset">смещение, необходимое для выборки определённого подмножества приглашений</param>
-        /// <returns>После успешного выполнения возвращает список объектов сообществ с дополнительным полем InvitedBy, содержащим идентификатор пользователя, который отправил приглашение.</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.getInvites"/>.
-        /// </remarks>
-        [Pure]
-        public ReadOnlyCollection<Group> GetInvites(int? count = null, int? offset = null)
-        {
-            VkErrors.ThrowIfNumberIsNegative(() => count);
-            VkErrors.ThrowIfNumberIsNegative(() => offset);
+			return _vk.Call(methodName: "groups.unbanUser", parameters: parameters);
+		}
 
-            var parameters = new VkParameters
-                {
-                    {"count", count},
-                    {"offset", offset}
-                };
-            VkResponseArray response = _vk.Call("groups.getInvites", parameters);
+		/// <inheritdoc />
+		public bool EditManager(GroupsEditManagerParams @params)
+		{
+			return _vk.Call(methodName: "groups.editManager", parameters: @params);
+		}
 
-            return response.Skip(1).ToReadOnlyCollectionOf<Group>(x => x);
-        }
+		/// <inheritdoc />
+		public GroupsEditParams GetSettings(ulong groupId)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+			};
 
-        /// <summary>
-        /// Добавляет пользователя в черный список группы.
-        /// </summary>
-        /// <param name="groupId">Идентификатор группы.</param>
-        /// <param name="userId">Идентификатор пользователя, которого нужно добавить в черный список.</param>
-        /// <param name="endDate">Дата завершения срока действия бана. Если параметр не указан пользователь будет заблокирован навсегда.</param>
-        /// <param name="reason">Причина бана <see cref="BanReason"/>.</param>
-        /// <param name="comment">Текст комментария к бану.</param>
-        /// <param name="commentVisible">true – текст комментария будет отображаться пользователю. false – текст комментария не доступен 
-        /// пользователю (по умолчанию).</param>
-        /// <returns>После успешного выполнения возвращает true.</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.banUser"/>.
-        /// </remarks>
-        public bool BanUser(long groupId, long userId, DateTime? endDate = null, BanReason? reason = null,
-                            string comment = "", bool commentVisible = false)
-        {
-            VkErrors.ThrowIfNumberIsNegative(() => groupId);
-            VkErrors.ThrowIfNumberIsNegative(() => userId);
+			GroupsEditParams result = _vk.Call(methodName: "groups.getSettings", parameters: parameters);
+			result.GroupId = groupId; // Требует метод edit но getSettings не возвращает
 
-            var parameters = new VkParameters
-                {
-                    {"group_id", groupId},
-                    {"user_id", userId},
-                    {"end_date", endDate},
-                    {"comment", comment},
-                    {"comment_visible", commentVisible}
-                };
-            parameters.Add("reason", reason);
+			return result;
+		}
 
-            return _vk.Call("groups.banUser", parameters);
-        }
+		/// <inheritdoc />
+		public bool Edit(GroupsEditParams @params)
+		{
+			var parameters = @params;
 
-        /// <summary>
-        /// Возвращает список забаненных пользователей в сообществе
-        /// </summary>
-        /// <param name="groupId">идентификатор сообщества</param>
-        /// <param name="count">количество записей, которое необходимо вернуть</param>
-        /// <param name="offset">смещение, необходимое для выборки определенного подмножества черного списка</param>
-        /// <returns>После успешного выполнения возвращает список объектов пользователей с дополнительным полем <see cref="BanInfo"/></returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.getBanned"/>.
-        /// </remarks>
-        [Pure]
-        public ReadOnlyCollection<User> GetBanned(long groupId, int? count = null, int? offset = null)
-        {
-            VkErrors.ThrowIfNumberIsNegative(() => groupId);
-            VkErrors.ThrowIfNumberIsNegative(() => count);
-            VkErrors.ThrowIfNumberIsNegative(() => offset);
+			return _vk.Call(methodName: "groups.edit", parameters: parameters);
+		}
 
-            var parameters = new VkParameters
-                {
-                    {"group_id", groupId},
-                    {"offset", offset},
-                    {"count", count}
-                };
+		/// <inheritdoc />
+		public bool EditPlace(long groupId, Place place = null)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
 
-            VkResponseArray response = _vk.Call("groups.getBanned", parameters);
+			if (place == null)
+			{
+				place = new Place();
+			}
 
-            return response.Skip(1).ToReadOnlyCollectionOf<User>(x => x);
-        }
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "title", place.Title }
+					, { "address", place.Address }
+					, { "country_id", place.CountryId }
+					, { "city_id", place.CityId }
+					, { "latitude", place.Latitude }
+					, { "longitude", place.Longitude }
+			};
 
-        /// <summary>
-        /// Убирает пользователя из черного списка сообщества.
-        /// </summary>
-        /// <param name="groupId">идентификатор сообщества</param>
-        /// <param name="userId">идентификатор пользователя, которого нужно убрать из черного списка</param>
-        /// <returns>После успешного выполнения возвращает true.</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.unbanUser"/>.
-        /// </remarks>
-        public bool UnbanUser(long groupId, long userId)
-        {
-            VkErrors.ThrowIfNumberIsNegative(() => groupId);
-            VkErrors.ThrowIfNumberIsNegative(() => userId);
+			var result = _vk.Call(methodName: "groups.editPlace", parameters: parameters);
 
-            var parameters = new VkParameters
-                {
-                    {"group_id", groupId},
-                    {"user_id", userId}
-                };
+			return result[key: "success"];
+		}
 
-            return _vk.Call("groups.unbanUser", parameters);
-        }
+		/// <inheritdoc />
+		public VkCollection<User> GetInvitedUsers(long groupId
+												, long? offset = null
+												, long? count = null
+												, UsersFields fields = null
+												, NameCase nameCase = null)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
 
-        /// <summary>
-        /// Позволяет назначить/разжаловать руководителя в сообществе или изменить уровень его полномочий.
-        /// </summary>
-        /// <param name="groupId">Идентификатор сообщества (указывается без знака «минус»)</param>
-        /// <param name="userId">Идентификатор пользователя, чьи полномочия в сообществе нужно изменить</param>
-        /// <param name="role">Уровень полномочий. Если параметр не задан, с пользователя user_id снимаются полномочия руководителя</param>
-        /// <param name="isContact">Отображать ли пользователя в блоке контактов сообщества</param>
-        /// <param name="contactPosition">Должность пользователя, отображаемая в блоке контактов</param>
-        /// <param name="contactPhone">Телефон пользователя, отображаемый в блоке контактов</param>
-        /// <param name="contactEmail">Email пользователя, отображаемый в блоке контактов</param>
-        /// <returns>В случае успешного выполнения возвращает true</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.editManager"/>.
-        /// </remarks>
-        [ApiVersion("5.28")]
-        public bool EditManager(long groupId, long userId, AdminLevel? role, bool? isContact = null, string contactPosition = null, string contactPhone = null, string contactEmail = null)
-        {
-            VkErrors.ThrowIfNumberIsNegative(() => groupId);
-            VkErrors.ThrowIfNumberIsNegative(() => userId);
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "offset", offset }
+					, { "count", count }
+					, { "fields", fields }
+					, { "name_case", nameCase }
+			};
 
-            var parameters = new VkParameters
-                {
-                    {"group_id", groupId},
-                    {"user_id", userId},
-                    {"role", role},
-                    {"is_contact", isContact},
-                    {"contact_position", contactPosition},
-                    {"contact_phone", contactPhone},
-                    {"contact_email", contactEmail}
-                };
+			return _vk.Call(methodName: "groups.getInvitedUsers", parameters: parameters).ToVkCollectionOf<User>(selector: x => x);
+		}
 
-            return _vk.Call("groups.unbanUser", parameters);
-        }
-        /// <summary>
-        /// Позволяет назначить/разжаловать руководителя в сообществе или изменить уровень его полномочий.
-        /// </summary>
-        /// <param name="groupId">Идентификатор сообщества (указывается без знака «минус»)</param>
-        /// <param name="userId">Идентификатор пользователя, чьи полномочия в сообществе нужно изменить</param>
-        /// <param name="role">Уровень полномочий. Если параметр не задан, с пользователя user_id снимаются полномочия руководителя</param>
-        /// <returns>В случае успешного выполнения возвращает true</returns>
-        /// <remarks>
-        /// Страница документации ВКонтакте <see href="http://vk.com/dev/groups.editManager"/>.
-        /// </remarks>
-        public bool EditManager(long groupId, long userId, AdminLevel? role)
-        {
-            return EditManager(groupId, userId, role, null, null, null, null);
-        }
-    }
+		/// <inheritdoc />
+		public bool Invite(long groupId, long userId, long? captchaSid = null, string captchaKey = null)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+			VkErrors.ThrowIfNumberIsNegative(expr: () => userId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "user_id", userId }
+					, { "captcha_sid", captchaSid }
+					, { "captcha_key", captchaKey }
+			};
+
+			return _vk.Call(methodName: "groups.invite", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public ExternalLink AddLink(long groupId, Uri link, string text)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "link", link }
+					, { "text", text }
+			};
+
+			return _vk.Call(methodName: "groups.addLink", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool DeleteLink(long groupId, ulong linkId)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "link_id", linkId }
+			};
+
+			return _vk.Call(methodName: "groups.deleteLink", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool EditLink(long groupId, ulong linkId, string text)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "link_id", linkId }
+					, { "text", text }
+			};
+
+			return _vk.Call(methodName: "groups.editLink", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool ReorderLink(long groupId, long linkId, long? after)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "link_id", linkId }
+					, { "after", after }
+			};
+
+			return _vk.Call(methodName: "groups.reorderLink", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool RemoveUser(long groupId, long userId)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+			VkErrors.ThrowIfNumberIsNegative(expr: () => userId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "user_id", userId }
+			};
+
+			return _vk.Call(methodName: "groups.removeUser", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool ApproveRequest(long groupId, long userId)
+		{
+			VkErrors.ThrowIfNumberIsNegative(expr: () => groupId);
+			VkErrors.ThrowIfNumberIsNegative(expr: () => userId);
+
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "user_id", userId }
+			};
+
+			return _vk.Call(methodName: "groups.approveRequest", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public Group Create(string title, string description, GroupType type, GroupSubType? subtype, uint? publicCategory = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "title", title }
+					, { "description", description }
+					, { "type", type }
+					, { "subtype", subtype }
+			};
+
+			return _vk.Call(methodName: "groups.create", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public VkCollection<User> GetRequests(long groupId, long? offset, long? count, UsersFields fields)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "offset", offset }
+					, { "count", count }
+					, { "fields", fields }
+			};
+
+			return _vk.Call(methodName: "groups.getRequests", parameters: parameters).ToVkCollectionOf<User>(selector: x => x);
+		}
+
+		/// <inheritdoc />
+		public VkCollection<Group> GetCatalog(ulong? categoryId = null, ulong? subcategoryId = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "category_id", categoryId }
+					, { "subcategory_id", subcategoryId }
+			};
+
+			return _vk.Call(methodName: "groups.getCatalog", parameters: parameters, skipAuthorization: true)
+					.ToVkCollectionOf<Group>(selector: x => x);
+		}
+
+		/// <inheritdoc />
+		public GroupsCatalogInfo GetCatalogInfo(bool? extended = null, bool? subcategories = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "extended", extended }
+					, { "subcategories", subcategories }
+			};
+
+			return _vk.Call(methodName: "groups.getCatalogInfo", parameters: parameters, skipAuthorization: true);
+		}
+
+		/// <inheritdoc />
+		public long AddCallbackServer(ulong groupId, string url, string title, string secretKey)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "url", url }
+					, { "title", title }
+					, { "secret_key", secretKey }
+			};
+
+			return _vk.Call(methodName: "groups.addCallbackServer", parameters: parameters)[key: "server_id"];
+		}
+
+		/// <inheritdoc />
+		public bool DeleteCallbackServer(ulong groupId, ulong serverId)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "server_id", serverId }
+			};
+
+			return _vk.Call(methodName: "groups.deleteCallbackServer", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool EditCallbackServer(ulong groupId, ulong serverId, string url, string title, string secretKey)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "server_id", serverId }
+					, { "url", url }
+					, { "title", title }
+					, { "secret_key", secretKey }
+			};
+
+			return _vk.Call(methodName: "groups.editCallbackServer", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public string GetCallbackConfirmationCode(ulong groupId)
+		{
+			var response = _vk.Call(methodName: "groups.getCallbackConfirmationCode"
+					, parameters: new VkParameters { { "group_id", groupId } });
+
+			return response[key: "code"];
+		}
+
+		/// <inheritdoc />
+		public VkCollection<CallbackServerItem> GetCallbackServers(ulong groupId, IEnumerable<ulong> serverIds = null)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "server_ids", serverIds }
+			};
+
+			return _vk.Call(methodName: "groups.getCallbackServers", parameters: parameters)
+					.ToVkCollectionOf<CallbackServerItem>(selector: x => x);
+		}
+
+		/// <inheritdoc />
+		public CallbackSettings GetCallbackSettings(ulong groupId, ulong serverId)
+		{
+			var parameters = new VkParameters
+			{
+					{ "group_id", groupId }
+					, { "server_id", serverId }
+			};
+
+			return _vk.Call(methodName: "groups.getCallbackSettings", parameters: parameters);
+		}
+
+		/// <inheritdoc />
+		public bool SetCallbackSettings(CallbackServerParams @params)
+		{
+			return _vk.Call(methodName: "groups.setCallbackSettings", parameters: @params);
+		}
+
+		/// <inheritdoc />
+		public LongPollServerResponse GetLongPollServer(ulong groupId)
+		{
+			return _vk.Call<LongPollServerResponse>(methodName: "groups.getLongPollServer"
+					, parameters: new VkParameters { { "group_id", groupId } });
+		}
+	}
 }

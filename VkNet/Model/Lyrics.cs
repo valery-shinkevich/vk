@@ -1,35 +1,44 @@
-﻿namespace VkNet.Model
+using System;
+using Newtonsoft.Json;
+using VkNet.Utils;
+
+namespace VkNet.Model
 {
-    using VkNet.Utils;
+	/// <summary>
+	/// Текст аудиозаписи.
+	/// См. описание http://vk.com/dev/audio.getLyrics
+	/// </summary>
+	[Serializable]
+	public class Lyrics
+	{
+		/// <summary>
+		/// Идентификатор текста аудиозаписи.
+		/// </summary>
+		[JsonProperty("lyrics_id")]
+		public long Id { get; set; }
 
-    /// <summary>
-    /// Текст аудиозаписи.
-    /// См. описание <see href="http://vk.com/dev/audio.getLyrics"/>.
-    /// </summary>
-    public class Lyrics
-    {
-        /// <summary>
-        /// Идентификатор текста аудиозаписи.
-        /// </summary>
-        public long Id { get; set; }
+		/// <summary>
+		/// Тест аудиозаписи. В качестве переводов строк в тексте используется '\n'.
+		/// </summary>
+		[JsonProperty("text")]
+		public string Text { get; set; }
 
-        /// <summary>
-        /// Тест аудиозаписи. В качестве переводов строк в тексте используется '\n'. 
-        /// </summary>
-        public string Text { get; set; }
+	#region Методы
 
-        #region Методы
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static Lyrics FromJson(VkResponse response)
+		{
+			return new Lyrics
+			{
+				Id = response[key: "lyrics_id"],
+				Text = response[key: "text"]
+			};
+		}
 
-        internal static Lyrics FromJson(VkResponse re)
-        {
-            var lyrics = new Lyrics();
-
-            lyrics.Id = re["lyrics_id"];
-            lyrics.Text = re["text"];
-
-            return lyrics;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

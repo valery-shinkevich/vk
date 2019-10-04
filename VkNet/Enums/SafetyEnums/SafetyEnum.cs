@@ -1,101 +1,146 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
+using VkNet.Utils;
 
 namespace VkNet.Enums.SafetyEnums
 {
 	/// <summary>
 	/// Аналог enum, типобезопасен.
 	/// </summary>
-	/// <typeparam name="TFilter">Непосредственно наследник</typeparam>
-	public class SafetyEnum <TFilter> where TFilter : SafetyEnum<TFilter>, new()
+	/// <typeparam name="TFilter"> Непосредственно наследник </typeparam>
+	[Serializable]
+	[SuppressMessage(category: "ReSharper", checkId: "StaticMemberInGenericType")]
+	public abstract class SafetyEnum<TFilter>
+			: IEqualityComparer<SafetyEnum<TFilter>>, IEquatable<SafetyEnum<TFilter>>
+			where TFilter : SafetyEnum<TFilter>, new()
 	{
-// ReSharper disable once StaticFieldInGenericType
-		private static readonly Dictionary<ulong, string> PossibleValues = new Dictionary<ulong, string>();
+		/// <summary>
+		/// Значение
+		/// </summary>
+		private string _value;
 
-		private ulong _mask;
-
-		protected static TFilter CreateFromMask(ulong mask)
+		/// <inheritdoc />
+		public bool Equals(SafetyEnum<TFilter> x, SafetyEnum<TFilter> y)
 		{
-			//Если в маске находятся незарегистрированные в словаре биты
-			if(PossibleValues.Select(pair => pair.Key)
-				.Where(key => (mask & key) != 0)
-				.DefaultIfEmpty((ulong)0)
-				.Aggregate(mask, (current, @ulong) => current - @ulong)
-				!= 0)
-				throw new ArgumentException(string.Format("Mask contains value(s) that not defined for type {0} (mask except known values: {1:x8})", typeof (TFilter).FullName, PossibleValues.Select(pair => pair.Key).Where(key => (mask & key) != 0).Aggregate(mask, (current, @ulong) => current - @ulong)), "mask");
-
-			return new TFilter { _mask = mask };
+			return x == y;
 		}
 
-		protected SafetyEnum()
+		/// <inheritdoc />
+		public int GetHashCode(SafetyEnum<TFilter> obj)
 		{
-			_mask = 0;
+			return obj._value.GetHashCode();
 		}
 
-		protected ulong Mask
+		/// <inheritdoc />
+		public bool Equals(SafetyEnum<TFilter> other)
 		{
-			get { return _mask; }
+			return Equals(x: this, y: other);
 		}
 
-		protected static TFilter RegisterPossibleValue(ulong mask, string value)
-		{
-			if (mask == 0 || (mask & (mask - 1)) != 0)
-				throw new ArgumentException("Mask must be a power of 2 (i.e. only one bit must be equal to 1)", "mask");
-			PossibleValues.Add(mask, value);
-
-			return CreateFromMask(mask);
-		}
-
+		/// <summary>
+		/// Регистрирует возможное значение.
+		/// </summary>
+		/// <param name="value"> Значение. </param>
+		/// <returns> </returns>
+		/// <exception cref="System.ArgumentException">
+		/// Mask must be a power of 2 (i.e.
+		/// only one bit must be equal to 1);mask
+		/// </exception>
 		protected static TFilter RegisterPossibleValue(string value)
 		{
-			ulong mask = PossibleValues.Select(pair => pair.Key).DefaultIfEmpty().Max();
-			mask = (mask == 0) ? 1 : (mask *= 2);
-
-			if (mask == 0 || (mask & (mask - 1)) != 0)
-				throw new ArgumentException("Mask must be a power of 2 (i.e. only one bit must be equal to 1)", "mask");
-
-
-			PossibleValues.Add(mask, value);
-
-			return CreateFromMask(mask);
+			return new TFilter { _value = value };
 		}
 
+		/// <summary>
+		/// Преобразовать в строку.
+		/// </summary>
 		public override string ToString()
 		{
-			return string.Join(",", PossibleValues.Where(pair => (pair.Key & _mask) != 0).Select(pair => pair.Value).ToArray());
+			return _value;
 		}
 
+		/// <summary>
+		/// Реализация оператора ==.
+		/// </summary>
+		/// <param name="left"> Левая часть. </param>
+		/// <param name="right"> Правая часть. </param>
+		/// <returns>
+		/// Результат.
+		/// </returns>
 		public static bool operator ==(SafetyEnum<TFilter> left, SafetyEnum<TFilter> right)
 		{
-			if (ReferenceEquals(right, left)) return true;
-			if (ReferenceEquals(null, left)) return false;
-			if (ReferenceEquals(null, right)) return false;
+			if (left is null)
+			{
+				return false;
+			}
 
-			return left._mask == right._mask;
+			if (right is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(objA: right, objB: left))
+			{
+				return true;
+			}
+
+			return left._value == right._value;
 		}
 
+		/// <summary>
+		/// Реализация оператора !=.
+		/// </summary>
+		/// <param name="left"> Левая часть. </param>
+		/// <param name="right"> Правая часть. </param>
+		/// <returns>
+		/// Результат.
+		/// </returns>
 		public static bool operator !=(SafetyEnum<TFilter> left, SafetyEnum<TFilter> right)
 		{
 			return !(left == right);
 		}
 
-		protected bool Equals(SafetyEnum<TFilter> other)
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> Объект перечисления типа TFilter - Непосредственно наследник </returns>
+		public static TFilter FromJson(VkResponse response)
 		{
-			return _mask == other._mask;
+			var value = response.ToString();
+
+			return FromJsonString(response: value);
 		}
 
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> Объект перечисления типа TFilter - Непосредственно наследник </returns>
+		public static TFilter FromJsonString(string response)
+		{
+			if (string.IsNullOrWhiteSpace(value: response))
+			{
+				return null;
+			}
+
+			var result = new TFilter { _value = response };
+			Activator.CreateInstance(type: result.GetType());
+
+			return result;
+		}
+
+		/// <inheritdoc />
 		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
-			return Equals((SafetyEnum<TFilter>) obj);
+			return this == (SafetyEnum<TFilter>) obj;
 		}
 
+		/// <inheritdoc />
 		public override int GetHashCode()
 		{
-			return _mask.GetHashCode();
+			return GetHashCode(obj: this);
 		}
 	}
 }

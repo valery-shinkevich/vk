@@ -1,38 +1,49 @@
-﻿namespace VkNet.Model
+﻿using System;
+using VkNet.Utils;
+
+namespace VkNet.Model
 {
-    using Utils;
+	/// <summary>
+	/// Адрес сервера для загрузки фотографий
+	/// </summary>
+	[Serializable]
+	public class UploadServerInfo
+	{
+		/// <summary>
+		/// Адрес для загрузки фотографий
+		/// </summary>
+		public string UploadUrl { get; set; }
 
-    /// <summary>
-    /// Адрес сервера для загрузки фотографий
-    /// </summary>
-    public class UploadServerInfo
-    {
-        /// <summary>
-        /// Адрес для загрузки фотографий
-        /// </summary>
-        public string UploadUrl { get; set; }
+		/// <summary>
+		/// Идентификатор альбома, в который будет загружена фотография
+		/// </summary>
+		public long? AlbumId { get; set; }
 
-        /// <summary>
-        /// Идентификатор альбома, в который будет загружена фотография
-        /// </summary>
-        public long? AlbumId { get; set; }
+		/// <summary>
+		/// Идентификатор пользователя, от чьего имени будет загружено фото
+		/// </summary>
+		public long? UserId { get; set; }
 
-        /// <summary>
-        /// Идентификатор пользователя, от чьего имени будет загружено фото
-        /// </summary>
-        public long? UserId { get; set; }
+	#region Methods
 
-        #region Methods
-        internal static UploadServerInfo FromJson(VkResponse response)
-        {
-            var info = new UploadServerInfo();
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static UploadServerInfo FromJson(VkResponse response)
+		{
+			var info = new UploadServerInfo
+			{
+					UploadUrl = response[key: "upload_url"]
+					, AlbumId = Utilities.GetNullableLongId(response: response[key: "album_id"] ?? response[key: "aid"])
+					, UserId = Utilities.GetNullableLongId(
+							response: response[key: "user_id"] ?? response[key: "message_id"] ?? response[key: "mid"])
+			};
 
-            info.UploadUrl = response["upload_url"];
-            info.AlbumId = Utilities.GetNullableLongId(response["album_id"] ?? response["aid"]);
-            info.UserId = Utilities.GetNullableLongId(response["user_id"] ?? response["mid"]);
+			return info;
+		}
 
-            return info;
-        }
-        #endregion
-    }
+	#endregion
+	}
 }

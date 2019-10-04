@@ -1,74 +1,82 @@
-﻿namespace VkNet.Model
+﻿using System;
+using System.Collections.ObjectModel;
+using VkNet.Enums;
+using VkNet.Utils;
+
+namespace VkNet.Model
 {
-    using System.Collections.ObjectModel;    
+	/// <summary>
+	/// Жизненная позиция (Personal).
+	/// Данная информация не документирована в официальном API ВКонтакте и
+	/// восстановлена по ответам.
+	/// </summary>
+	[Serializable]
+	public class StandInLife
+	{
+		/// <summary>
+		/// Политические предпочтения пользователя.
+		/// </summary>
+		public PoliticalPreferences Political { get; set; }
 
-    using Enums;
-    using Utils;
+		/// <summary>
+		/// Языки, на которых говорит пользователь.
+		/// </summary>
+		public ReadOnlyCollection<string> Languages { get; set; }
 
-    /// <summary>
-    /// Жизненная позиция (Personal).
-    /// Данная информация не документирована в официальном API ВКонтакте и восстановлена по ответам.
-    /// </summary>
-    public class StandInLife
-    {
-        /// <summary>
-        /// Политические предпочтения пользователя.
-        /// </summary>
-        public PoliticalPreferences Political { get; set; }
+		/// <summary>
+		/// Мировоззрение пользователя.
+		/// </summary>
+		public string Religion { get; set; }
 
-        /// <summary>
-        /// Языки, на которых говорит пользователь.
-        /// </summary>
-        public Collection<string> Languages { get; set; }
+		/// <summary>
+		/// Источники вдохновения пользователя.
+		/// </summary>
+		public string InspiredBy { get; set; }
 
-        /// <summary>
-        /// Мировоззрение пользователя.
-        /// </summary>
-        public string Religion { get; set; }
+		/// <summary>
+		/// Главное в людях для пользователя.
+		/// </summary>
+		public PeopleMain PeopleMain { get; set; }
 
-        /// <summary>
-        /// Источники вдохновения пользователя.
-        /// </summary>
-        public string InspiredBy { get; set; }
+		/// <summary>
+		/// Главное в жизни для пользователя.
+		/// </summary>
+		public LifeMain LifeMain { get; set; }
 
-        /// <summary>
-        /// Главное в людях для пользователя.
-        /// </summary>
-        public PeopleMain PeopleMain { get; set; }
+		/// <summary>
+		/// Отношение к курению.
+		/// </summary>
+		public Attitude Smoking { get; set; }
 
-        /// <summary>
-        /// Главное в жизни для пользователя.
-        /// </summary>
-        public LifeMain LifeMain { get; set; }
+		/// <summary>
+		/// Отношение к алкоголю.
+		/// </summary>
+		public Attitude Alcohol { get; set; }
 
-        /// <summary>
-        /// Отношение к курению.
-        /// </summary>
-        public Attitude Smoking { get; set; }
+	#region Методы
 
-        /// <summary>
-        /// Отношение к алкоголю.
-        /// </summary>
-        public Attitude Alcohol { get; set; }
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static StandInLife FromJson(VkResponse response)
+		{
+			var standInLife = new StandInLife
+			{
+					Political = response[key: "political"]
+					, Languages = response[key: "langs"].ToReadOnlyCollectionOf<string>(selector: x => x)
+					, Religion = response[key: "religion"]
+					, InspiredBy = response[key: "inspired_by"]
+					, PeopleMain = response[key: "people_main"]
+					, LifeMain = response[key: "life_main"]
+					, Smoking = response[key: "smoking"]
+					, Alcohol = response[key: "alcohol"]
+			};
 
-        #region Методы
+			return standInLife;
+		}
 
-        internal static StandInLife FromJson(VkResponse response)
-        {
-            var standInLife = new StandInLife();
-
-            standInLife.Political = response["political"];
-            standInLife.Languages = response["langs"];
-            standInLife.Religion = response["religion"];
-            standInLife.InspiredBy = response["inspired_by"];
-            standInLife.PeopleMain = response["people_main"];
-            standInLife.LifeMain = response["life_main"];
-            standInLife.Smoking = response["smoking"];
-            standInLife.Alcohol = response["alcohol"];
-
-            return standInLife;
-        }
-
-        #endregion
-    }
+	#endregion
+	}
 }

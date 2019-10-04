@@ -1,43 +1,64 @@
-﻿using VkNet.Utils;
+using System;
+using Newtonsoft.Json;
+using VkNet.Utils;
 
 namespace VkNet.Model
 {
-    /// <summary>
-    /// Информация об аудиоальбоме.
-    /// </summary>
-    /// <remarks>
-    /// Страница документации ВКонтакте <see href="http://vk.com/dev/audio.getAlbums"/>.
-    /// </remarks>
-    public class AudioAlbum
-    {
-        /// <summary>
-        /// Идентификатор владельца альбома.
-        /// </summary>
-        public long? OwnerId { get; set; }
+	/// <summary>
+	/// Информация об аудиоальбоме.
+	/// </summary>
+	[Serializable]
+	public class AudioAlbum
+	{
+		/// <summary>
+		/// Идентификатор альбома.
+		/// </summary>
+		[JsonProperty("id")]
+		public long Id { get; set; }
 
-        /// <summary>
-        /// Идентификатор альбома.
-        /// </summary>
-        public long? AlbumId { get; set; }
+		/// <summary>
+		/// Идентификатор владельца альбома (пользователь или сообщество).
+		/// </summary>
+		[JsonProperty("owner_id")]
+		public long OwnerId { get; set; }
 
-        /// <summary>
-        /// Название альбома.
-        /// </summary>
-        public string Title { get; set; }
+		/// <summary>
+		/// Название альбома.
+		/// </summary>
+		[JsonProperty("title")]
+		public string Title { get; set; }
 
-        #region Методы
+		/// <summary>
+		/// Обложка альбома.
+		/// </summary>
+		[JsonProperty("thumb")]
+		public AudioCover Cover { get; set; }
 
-        internal static AudioAlbum FromJson(VkResponse response)
-        {
-            var album = new AudioAlbum();
+		/// <summary>
+		/// Ключ доступа.
+		/// </summary>
+		[JsonProperty("access_key")]
+		public string AccessKey { get; set; }
 
-            album.OwnerId = response["owner_id"];
-            album.AlbumId = response["album_id"];
-            album.Title = response["title"];
+	#region Методы
 
-            return album;
-        }
+		/// <summary>
+		/// Разобрать из json.
+		/// </summary>
+		/// <param name="response"> Ответ сервера. </param>
+		/// <returns> </returns>
+		public static AudioAlbum FromJson(VkResponse response)
+		{
+			return new AudioAlbum
+			{
+				Id = response["id"],
+				OwnerId = response["owner_id"],
+				Title = response["title"],
+				Cover = response["thumb"],
+				AccessKey = response["access_key"]
+			};
+		}
 
-        #endregion
-    }
+	#endregion
+	}
 }
